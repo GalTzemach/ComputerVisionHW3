@@ -12,8 +12,8 @@ int main(int argc, char** argv)
 	Mat img1_source, img2_source, img1, img2;
 
 	// Loading the original images(color).
-	img1_source = imread("first.jpg");
-	img2_source = imread("second.jpg");
+	img1_source = imread("1.jpg"); //first
+	img2_source = imread("2.jpg"); //second
 
 	if (img1_source.empty() || img2_source.empty())
 	{
@@ -121,16 +121,28 @@ int main(int argc, char** argv)
 
 	cout << "Filtered matches Final: " << filteredMatchesFinal.size() << endl;
 
-	Mat img_result;
+	Mat img_result, img_result2;
 	drawMatches(img1_source, keypoints_img1, img2_source, keypoints_img2, filteredMatchesFinal, img_result, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+	
+	img_result2 = img_result.clone();
 
+	while (img_result2.cols > 1920 || img_result2.rows > 1080)
+	{
+		resize(img_result2, img_result2, Size(), 0.9, 0.9);
+	}
 
-	//setWindowProperty("Good Matches & Object detection 2", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
-	//setWindowProperty("Good Matches & Object detection 2", CV_WND_PROP_ASPECTRATIO, CV_WINDOW_KEEPRATIO);
 	imwrite("res.jpg", img_result);
+	imwrite("res2.jpg", img_result2);
+
+
 	namedWindow(windowRes, CV_WINDOW_KEEPRATIO);
+	//setWindowProperty(windowRes, CV_WND_PROP_ASPECTRATIO, CV_WINDOW_KEEPRATIO);
+	setWindowProperty(windowRes, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+	//resizeWindow(windowRes, img_result.cols, img_result.rows);
 	imshow(windowRes, img_result);
 
+
+	
 
 
 	///// From here is optional
