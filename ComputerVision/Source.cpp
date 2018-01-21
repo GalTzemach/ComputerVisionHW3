@@ -42,31 +42,32 @@ int main(int argc, char** argv)
 
 	//-- Step 3: Matching descriptor vectors
 	Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce");
-	vector<DMatch> allMatches;
-	double max_dist = 0, min_dist = 10000; /// Original min_dist = 100
-	matcher->match(descriptors_img1, descriptors_img2, allMatches);
 
+	// Find matches from img1 to img2
+	vector<DMatch> allMatches1;
+	double max_dist1 = 0, min_dist1 = 10000;
+	matcher->match(descriptors_img1, descriptors_img2, allMatches1);
 
+	// Find matches from img2 to img1
 	vector<DMatch> allMatches2;
-	double max_dist2 = 0, min_dist2 = 10000; /// Original min_dist = 100
+	double max_dist2 = 0, min_dist2 = 10000;
 	matcher->match(descriptors_img2, descriptors_img1, allMatches2);
 
 
 	//-- Quick calculation of max and min distances between keypoints
 	double dist;
 
-	for (int i = 0; i < descriptors_img1.rows; i++)
+	// From img1 to img2
+	for (int i = 0; i < allMatches1.size(); i++)
 	{
-		dist = allMatches[i].distance;
-		if (dist < min_dist)
-			min_dist = dist;
-		if (dist > max_dist)
-			max_dist = dist;
+		dist = allMatches1[i].distance;
+		if (dist < min_dist1)
+			min_dist1 = dist;
+		if (dist > max_dist1)
+			max_dist1 = dist;
 	}
 
-	cout << "Max distance 1: " << max_dist << endl;
-	cout << "Min distance 1: " << min_dist << endl;
-
+	// From img2 to img1
 	for (int i = 0; i < descriptors_img2.rows; i++)
 	{
 		dist = allMatches2[i].distance;
@@ -76,23 +77,26 @@ int main(int argc, char** argv)
 			max_dist2 = dist;
 	}
 
-	cout << "Max distance 2: " << max_dist2 << endl;
-	cout << "Min distance 2: " << min_dist2 << endl;
-
 	//-- Draw only "good" matches (i.e. whose distance is less than MIN_THRESHOLD*min_dist )
 	vector< DMatch > filteredMatches;
+
+	// Filter allMatches1 by  MIN_THRESHOLD
 	for (int i = 0; i < descriptors_img1.rows; i++)
 	{
-		if (allMatches[i].distance < MIN_THRESHOLD * min_dist)
+		if (allMatches1[i].distance < MIN_THRESHOLD * min_dist1)
 		{
-			filteredMatches.push_back(allMatches[i]);
+			filteredMatches.push_back(allMatches1[i]);
 		}
 	}
 
-	cout << "All matches 1: " << allMatches.size() << endl;
+	cout << "Max distance 1: " << max_dist1 << endl;
+	cout << "Min distance 1: " << min_dist1 << endl;
+	cout << "All matches 1: " << allMatches1.size() << endl;
 	cout << "Filtered matches 1: " << filteredMatches.size() << endl;
 
 	vector< DMatch > filteredMatches2;
+
+	// Filter allMatches2 by  MIN_THRESHOLD
 	for (int i = 0; i < descriptors_img2.rows; i++)
 	{
 		if (allMatches2[i].distance < MIN_THRESHOLD * min_dist2)
@@ -101,10 +105,12 @@ int main(int argc, char** argv)
 		}
 	}
 
+	cout << "Max distance 2: " << max_dist2 << endl;
+	cout << "Min distance 2: " << min_dist2 << endl;
 	cout << "All matches 2: " << allMatches2.size() << endl;
 	cout << "Filtered matches 2: " << filteredMatches2.size() << endl;
 
-
+	// Filter again and takes only results that appear in both vector
 	vector< DMatch > filteredMatchesFinal;
 	for (int i = 0; i < filteredMatches.size(); i++)
 	{
@@ -121,30 +127,21 @@ int main(int argc, char** argv)
 
 	cout << "Filtered matches Final: " << filteredMatchesFinal.size() << endl;
 
-	Mat img_result, img_result2;
+	Mat img_result;
 	drawMatches(img1_source, keypoints_img1, img2_source, keypoints_img2, filteredMatchesFinal, img_result, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-	
-	img_result2 = img_result.clone();
 
-	while (img_result2.cols > 1920 || img_result2.rows > 1080)
-	{
-		resize(img_result2, img_result2, Size(), 0.9, 0.9);
-	}
-
+	// Save the img_result as a file.
 	imwrite("res.jpg", img_result);
-	imwrite("res2.jpg", img_result2);
 
 
 	namedWindow(windowRes, CV_WINDOW_KEEPRATIO);
+	//setWindowProperty(windowRes, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
 	//setWindowProperty(windowRes, CV_WND_PROP_ASPECTRATIO, CV_WINDOW_KEEPRATIO);
-	setWindowProperty(windowRes, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
 	//resizeWindow(windowRes, img_result.cols, img_result.rows);
 	imshow(windowRes, img_result);
 
 
-	
-
-
+	// #################################################################################
 	///// From here is optional
 	////-- Localize the object
 	//vector<Point2f> obj;
