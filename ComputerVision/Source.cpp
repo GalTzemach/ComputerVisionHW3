@@ -1,19 +1,22 @@
-#include <iostream>
 #include <opencv2\opencv.hpp>
+#include <iostream>
 
 using namespace cv;
 using namespace std;
 
+
 int main(int argc, char** argv)
 {
-	String windowRes = "Result";
-	const float MIN_THRESHOLD = 1.9f; /// Original = 3
+	String windowRes = "Result window";
+	const float MIN_THRESHOLD = 10.0f; /// Original = 3
+	clock_t startTime, endTime;
+	startTime = clock();
 
 	Mat img1_source, img2_source, img1, img2;
 
 	// Loading the original images(color).
-	img1_source = imread("1.jpg"); //first
-	img2_source = imread("2.jpg"); //second
+	img1_source = imread("first.jpg"); //first
+	img2_source = imread("second.jpg"); //second
 
 	if (img1_source.empty() || img2_source.empty())
 	{
@@ -27,7 +30,7 @@ int main(int argc, char** argv)
 
 
 	//-- Step 1: Detect the keypoints
-	Ptr<FeatureDetector> detector = ORB::create();
+	Ptr<FeatureDetector> detector = ORB::create(10000, 1.2, 8, 31, 0, 2, 0, 31, 20);
 	vector<KeyPoint> keypoints_img1, keypoints_img2;
 
 	detector->detect(img1, keypoints_img1);
@@ -139,6 +142,9 @@ int main(int argc, char** argv)
 	//setWindowProperty(windowRes, CV_WND_PROP_ASPECTRATIO, CV_WINDOW_KEEPRATIO);
 	//resizeWindow(windowRes, img_result.cols, img_result.rows);
 	imshow(windowRes, img_result);
+
+	endTime = clock();
+	cout << "Total time = " << (double) (endTime - startTime) / CLOCKS_PER_SEC << " Sec" << endl;
 
 
 	// #################################################################################
