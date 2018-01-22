@@ -8,15 +8,17 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	String windowRes = "Result window";
-	const float MIN_THRESHOLD = 10.0f; /// Original = 3
+	const double MIN_THRESHOLD = 70;
+
+	// In order to calculate execution time.
 	clock_t startTime, endTime;
 	startTime = clock();
 
 	Mat img1_source, img2_source, img1, img2;
 
 	// Loading the original images(color).
-	img1_source = imread("first.jpg"); //first
-	img2_source = imread("second.jpg"); //second
+	img1_source = imread("1.jpg"); //first
+	img2_source = imread("2.jpg"); //second
 
 	if (img1_source.empty() || img2_source.empty())
 	{
@@ -80,27 +82,27 @@ int main(int argc, char** argv)
 			max_dist2 = dist;
 	}
 
-	//-- Draw only "good" matches (i.e. whose distance is less than MIN_THRESHOLD*min_dist )
-	vector< DMatch > filteredMatches;
+	//-- Filter only "good" matches (i.e. whose distance is less than MIN_THRESHOLD*min_dist )
+	vector< DMatch > filteredMatches1;
 
-	// Filter allMatches1 by  MIN_THRESHOLD
-	for (int i = 0; i < descriptors_img1.rows; i++)
+	// Filter allMatches1 by MIN_THRESHOLD
+	for (int i = 0; i < allMatches1.size(); i++)
 	{
 		if (allMatches1[i].distance < MIN_THRESHOLD * min_dist1)
 		{
-			filteredMatches.push_back(allMatches1[i]);
+			filteredMatches1.push_back(allMatches1[i]);
 		}
 	}
 
 	cout << "Max distance 1: " << max_dist1 << endl;
 	cout << "Min distance 1: " << min_dist1 << endl;
 	cout << "All matches 1: " << allMatches1.size() << endl;
-	cout << "Filtered matches 1: " << filteredMatches.size() << endl;
+	cout << "Filtered matches 1: " << filteredMatches1.size() << endl << endl;
 
 	vector< DMatch > filteredMatches2;
 
 	// Filter allMatches2 by  MIN_THRESHOLD
-	for (int i = 0; i < descriptors_img2.rows; i++)
+	for (int i = 0; i < allMatches2.size(); i++)
 	{
 		if (allMatches2[i].distance < MIN_THRESHOLD * min_dist2)
 		{
@@ -111,19 +113,19 @@ int main(int argc, char** argv)
 	cout << "Max distance 2: " << max_dist2 << endl;
 	cout << "Min distance 2: " << min_dist2 << endl;
 	cout << "All matches 2: " << allMatches2.size() << endl;
-	cout << "Filtered matches 2: " << filteredMatches2.size() << endl;
+	cout << "Filtered matches 2: " << filteredMatches2.size() << endl << endl;
 
 	// Filter again and takes only results that appear in both vector
 	vector< DMatch > filteredMatchesFinal;
-	for (int i = 0; i < filteredMatches.size(); i++)
+	for (int i = 0; i < filteredMatches1.size(); i++)
 	{
 		for (int j = 0; j < filteredMatches2.size(); j++)
 		{
-			if (filteredMatches[i].distance == filteredMatches2[j].distance
-				&& filteredMatches[i].queryIdx == filteredMatches2[j].trainIdx
-				&& filteredMatches[i].trainIdx == filteredMatches2[j].queryIdx)
+			if (filteredMatches1[i].distance == filteredMatches2[j].distance
+				&& filteredMatches1[i].queryIdx == filteredMatches2[j].trainIdx
+				&& filteredMatches1[i].trainIdx == filteredMatches2[j].queryIdx)
 			{
-				filteredMatchesFinal.push_back(filteredMatches[i]);
+				filteredMatchesFinal.push_back(filteredMatches1[i]);
 			}
 		}
 	}
@@ -136,51 +138,11 @@ int main(int argc, char** argv)
 	// Save the img_result as a file.
 	imwrite("res.jpg", img_result);
 
-
 	namedWindow(windowRes, CV_WINDOW_KEEPRATIO);
-	//setWindowProperty(windowRes, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
-	//setWindowProperty(windowRes, CV_WND_PROP_ASPECTRATIO, CV_WINDOW_KEEPRATIO);
-	//resizeWindow(windowRes, img_result.cols, img_result.rows);
 	imshow(windowRes, img_result);
 
 	endTime = clock();
-	cout << "Total time = " << (double) (endTime - startTime) / CLOCKS_PER_SEC << " Sec" << endl;
-
-
-	// #################################################################################
-	///// From here is optional
-	////-- Localize the object
-	//vector<Point2f> obj;
-	//vector<Point2f> scene;
-
-	//for (int i = 0; i < filteredMatches.size(); i++)
-	//{
-	//	//-- Get the keypoints from the good matches
-	//	obj.push_back(keypoints_img1[filteredMatches[i].queryIdx].pt);
-	//	scene.push_back(keypoints_img2[filteredMatches[i].trainIdx].pt);
-	//}
-
-	//Mat H = findHomography(obj, scene, CV_RANSAC);
-
-	////-- Get the corners from the image_1 ( the object to be "detected" )
-	//vector<Point2f> obj_corners(4);
-	//obj_corners[0] = cvPoint(0, 0);
-	//obj_corners[1] = cvPoint(img1.cols, 0);
-	//obj_corners[2] = cvPoint(img1.cols, img1.rows);
-	//obj_corners[3] = cvPoint(0, img1.rows);
-
-	//vector<Point2f> scene_corners(4);
-	//perspectiveTransform(obj_corners, scene_corners, H);
-
-	////-- Draw lines between the corners (the mapped object in the scene - image_2 )
-	//line(img_result, scene_corners[0] + Point2f(img1.cols, 0), scene_corners[1] + Point2f(img1.cols, 0), Scalar(0, 255, 0), 4);
-	//line(img_result, scene_corners[1] + Point2f(img1.cols, 0), scene_corners[2] + Point2f(img1.cols, 0), Scalar(0, 255, 0), 4);
-	//line(img_result, scene_corners[2] + Point2f(img1.cols, 0), scene_corners[3] + Point2f(img1.cols, 0), Scalar(0, 255, 0), 4);
-	//line(img_result, scene_corners[3] + Point2f(img1.cols, 0), scene_corners[0] + Point2f(img1.cols, 0), Scalar(0, 255, 0), 4);
-
-	////-- Show detected matches
-	//namedWindow("Good Matches & Object detection 2", CV_WINDOW_KEEPRATIO);
-	//imshow("Good Matches & Object detection 2", img_result);
+	cout << "Total time = " << (double)(endTime - startTime) / CLOCKS_PER_SEC << " Sec" << endl;
 
 	waitKey(0);
 	return 0;
